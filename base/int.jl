@@ -860,3 +860,67 @@ for op in (:+, :-, :*, :&, :|, :xor)
         return $op(aT, bT)
     end
 end
+
+"""
+    bitreverse(x)
+
+Reverse the order of bits in integer `x`. `x` must have a fixed bit width,
+e.g. be an `Int16` or `Int32`.
+
+!!! compat "Julia 1.5"
+    This function requires Julia 1.5 or later.
+
+# Examples
+```jldoctest
+julia> bitreverse(0x8080808080808080)
+0x0101010101010101
+
+julia> reverse(bitstring(0xa06e)) == bitstring(bitreverse(0xa06e))
+true
+```
+"""
+function bitreverse end
+
+function bitreverse(x::Union{Int8,UInt8})
+    z = x % UInt8
+    z = ((z >>> 1) & 0x55) | ((z << 1) & 0xaa)
+    z = ((z >>> 2) & 0x33) | ((z << 2) & 0xcc)
+    z = ((z >>> 4) & 0x0f) | ((z << 4) & 0xf0)
+    return z % typeof(x)
+end
+
+function bitreverse(x::Union{Int16,UInt16})
+    z = x % UInt16
+    z = ((z >>> 1) & 0x5555) | ((z << 1) & 0xaaaa)
+    z = ((z >>> 2) & 0x3333) | ((z << 2) & 0xcccc)
+    z = ((z >>> 4) & 0x0f0f) | ((z << 4) & 0xf0f0)
+    z = ((z >>> 8) & 0x00ff) | ((z << 8) & 0xff00)
+    return z % typeof(x)
+end
+
+function bitreverse(x::Union{Int32,UInt32})
+    z = x % UInt32
+    z = ((z >>>  1) & 0x55555555) | ((z <<  1) & 0xaaaaaaaa)
+    z = ((z >>>  2) & 0x33333333) | ((z <<  2) & 0xcccccccc)
+    z = ((z >>>  4) & 0x0f0f0f0f) | ((z <<  4) & 0xf0f0f0f0)
+    z = ((z >>>  8) & 0x00ff00ff) | ((z <<  8) & 0xff00ff00)
+    z = ((z >>> 16) & 0x0000ffff) | ((z << 16) & 0xffff0000)
+    return z % typeof(x)
+end
+
+function bitreverse(x::Union{Int64,UInt64})
+    z = x % UInt64
+    z = ((z >>>  1) & 0x5555555555555555) | ((z <<  1) & 0xaaaaaaaaaaaaaaaa)
+    z = ((z >>>  2) & 0x3333333333333333) | ((z <<  2) & 0xcccccccccccccccc)
+    z = ((z >>>  4) & 0x0f0f0f0f0f0f0f0f) | ((z <<  4) & 0xf0f0f0f0f0f0f0f0)
+    z = ((z >>>  8) & 0x00ff00ff00ff00ff) | ((z <<  8) & 0xff00ff00ff00ff00)
+    z = ((z >>> 16) & 0x0000ffff0000ffff) | ((z << 16) & 0xffff0000ffff0000)
+    z = ((z >>> 32) & 0x00000000ffffffff) | ((z << 32) & 0xffffffff00000000)
+    return z % typeof(x)
+end
+
+function bitreverse(x::Union{Int128,UInt128})
+    z = x % UInt128
+    z = ((bitreverse(x % UInt64) % UInt128) << 64) | (bitreverse((x >>> 64) % UInt64) % UInt128)
+    return z % typeof(x)
+end
