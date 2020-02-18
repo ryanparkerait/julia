@@ -88,7 +88,9 @@ should therefore also implement [`hash`](@ref).
 Similar to [`==`](@ref), except for the treatment of floating point numbers
 and of missing values. `isequal` treats all floating-point `NaN` values as equal
 to each other, treats `-0.0` as unequal to `0.0`, and [`missing`](@ref) as equal
-to `missing`. Always returns a `Bool` value.
+to `missing`. Always returns a `Bool` value. It can be assumed that two values which
+are `===` are also `isequal`, and that `isequal(x, y)` returns the same result as
+`isequal(y, x)`.
 
 # Implementation
 The default implementation of `isequal` calls `==`, so a type that does not involve
@@ -98,8 +100,12 @@ floating-point values generally only needs to define `==`.
 that `hash(x) == hash(y)`.
 
 This typically means that types for which a custom `==` or `isequal` method exists must
-implement a corresponding `hash` method (and vice versa). Collections typically implement
-`isequal` by calling `isequal` recursively on all contents.
+implement a corresponding [`hash`](@ref) method (and vice versa). Collections typically
+implement `isequal` by calling `isequal` recursively on all contents.
+
+Furthermore, `isequal` is linked with [`isless`](@ref), and they work together to
+define a fixed total ordering, where only one of `isequal(x, y)`, `isless(x, y)`, or
+`isless(y, x)` may be `true` (and the other two `false`).
 
 Scalar types generally do not need to implement `isequal` separate from `==`, unless they
 represent floating-point numbers amenable to a more efficient implementation than that
@@ -132,8 +138,8 @@ isequal(x::AbstractFloat, y::Real         ) = (isnan(x) & isnan(y)) | signequal(
 """
     isless(x, y)
 
-Test whether `x` is less than `y`, according to a fixed total order.
-`isless` is not defined on all pairs of values `(x, y)`. However, if it
+Test whether `x` is less than `y`, according to a fixed total order (defined together with
+[`isequal`](@ref)). `isless` is not defined on all pairs of values `(x, y)`. However, if it
 is defined, it is expected to satisfy the following:
 - If `isless(x, y)` is defined, then so is `isless(y, x)` and `isequal(x, y)`,
   and exactly one of those three yields `true`.
